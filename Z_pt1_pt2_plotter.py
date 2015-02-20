@@ -62,10 +62,6 @@ for region in pt_regions:
 # loop over the events
 for iev,event in enumerate(events):
     #if iev > 100: break
-    pt1=9999
-    pt2=-1
-    pt1_gen=9999
-    pt2_gen=-1
     #print iev #Ti stampa il numero dell'evento che stai considerando
     # use getByLabel, just like in cmsRun
     event.getByLabel (ele_label,ele_handle)
@@ -79,6 +75,10 @@ for iev,event in enumerate(events):
     ismatched0=0
     ismatched1=0
 
+    pt1=9999
+    pt2=-1
+    pt1_gen=9999
+    pt2_gen=-1
     for igen, genParticle in enumerate(gen_particles):#loopo sulle particelle generate
         if (abs(genParticle.pdgId())==11 and genParticle.mother().pdgId()==23 ):# se si tratta di un elettrone di madre Z
             vector_gen = ROOT.TLorentzVector(genParticle.px(),genParticle.py(),genParticle.pz(),genParticle.energy())
@@ -116,9 +116,9 @@ for iev,event in enumerate(events):
     if (ismatched0 and ismatched1):
         for region in pt_regions: 
             if ((vector_Z_gen.Pt()) >= regions[region]['ptmin'] and (vector_Z_gen.Pt()) < regions[region]['ptmax']):
-                hist['pt1_reco'][regions[region]['name']].Fill(pt1_gen)
-                hist['pt2_reco'][regions[region]['name']].Fill(pt2_gen)
-                hist['pt1_Over_pt2_reco'][regions[region]['name']].Fill(pt1_gen/pt2_gen)
+                hist['pt1_reco'][regions[region]['name']].Fill(pt1)
+                hist['pt2_reco'][regions[region]['name']].Fill(pt2)
+                hist['pt1_Over_pt2_reco'][regions[region]['name']].Fill(pt1/pt2)
 
 # draw everything and save the histos
 
@@ -133,7 +133,6 @@ for region in pt_regions:
     hist['pt2_gen'][regions[region]['name']].Write()
     hist['pt1_Over_pt2_gen'][regions[region]['name']].Write()
     canvas[str(region)].cd()
-    hist['pt1_Over_pt2_reco'][regions[region]['name']].Draw()
     hist['pt1_Over_pt2_gen'][regions[region]['name']].SetLineColor(ROOT.kRed)
     hist['pt1_Over_pt2_gen'][regions[region]['name']].Draw()
     canvas[str(region)].SaveAs(str('~/scratch1/www/Pt1Pt2/pt1_pt2_plots/'+region+'_gen.png'))
@@ -143,7 +142,6 @@ for region in pt_regions:
     hist['pt2_reco'][regions[region]['name']].Write()
     hist['pt1_Over_pt2_reco'][regions[region]['name']].Write()
     canvas[str(region)].cd()
-    hist['pt1_Over_pt2_reco'][regions[region]['name']].Draw()
     hist['pt1_Over_pt2_reco'][regions[region]['name']].Draw()
     canvas[str(region)].SaveAs(str('~/scratch1/www/Pt1Pt2/pt1_pt2_plots/'+region+'_reco.png'))
     canvas[str(region)].Write()
