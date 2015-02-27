@@ -1,10 +1,50 @@
-#more info at https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookFWLitePython
-#more info at https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookMiniAOD#MC_Truth
+#!/usr/bin/python
 import math, os
 import ROOT
 from DataFormats.FWLite import Events, Handle
 
-events = Events("root://xrootd.unl.edu//store/mc/Phys14DR/DYToEE_Tune4C_13TeV-pythia8/AODSIM/AVE20BX25_tsg_PHYS14_25_V3-v1/10000/0CCBF0FA-2289-E411-A5D4-003048F0E55A.root") #Questi sono gli AOD
+#more info at https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookFWLitePython
+#more info at https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookMiniAOD#MC_Truth
+# http://cmslxr.fnal.gov/source/DataFormats/FWLite/interface/Event.h
+# http://cmslxr.fnal.gov/lxr/
+# dataset=/*DYToEE*/Phys14DR*/*AODSIM
+# https://cmsweb.cern.ch/das/request?input=dataset%3D%2FDYToEE_Tune4C_13TeV-pythia8%2FPhys14DR-AVE20BX25_tsg_PHYS14_25_V3-v1%2FAODSIM&instance=prod%2Fglobal
+
+##########################STARTING TO DO SOMETHING#####################
+
+######################Parsing arguments in python#####################
+import sys,getopt #to handle arguments in python
+
+def main(argv):# defining the main function, called later
+   try:
+      opts, args = getopt.getopt(argv,"hn:",["file_number="])#getopt takes three args: a list (argv),short options, long options
+#short options that requires an argument are followed by :, long options requiring an argument are followed by =
+   except getopt.GetoptError:
+      sys.exit(2)
+   for opt, arg in opts:
+      if opt == '-h':
+         print 'python Z_pt1_pt2_plotter.py -n #'
+         print 'or'
+         print 'python Z_pt1_pt2_plotter.py --file_number=#'
+         sys.exit()
+      elif opt in ("-n","--file_number"):
+         global _N #defining a global variable _N
+         _N=arg
+
+if __name__ == "__main__":
+   main(sys.argv[1:]) #argomento 0 e' il plotter.py, percio' lo scarti e ti prendi gli altri che seguono
+
+########################################################################
+
+
+#Questi sono gli AOD
+sample_location= 'root://xrootd.unl.edu//store/mc/Phys14DR/DYToEE_Tune4C_13TeV-pythia8/AODSIM/AVE20BX25_tsg_PHYS14_25_V3-v1/10000/'
+filename=['0CCBF0FA-2289-E411-A5D4-003048F0E55A.root','34A140BA-1A89-E411-B4CD-003048F0E55A.root','386E81D1-5A89-E411-88B4-003048CF6346.root','4C2A4F24-1589-E411-8778-002590AC505C.root','52841D85-1C89-E411-91A8-0025907FD280.root','52BD2BCB-9D89-E411-89ED-003048D3CD6C.root','5EF5E61F-1889-E411-BA2C-0025907DCA72.root','A2EF7743-1689-E411-8EA2-002590AC4FC8.root','BCDC8148-1989-E411-8B64-002590DB9302.root','DA87A535-1789-E411-8167-002590AC4BF6.root']
+
+print str(sample_location+filename[int(_N)])
+
+
+events = Events(str(sample_location+filename[int(_N)]))
 
 #events = Events("root://xrootd.unl.edu//store/mc/Phys14DR/DYToEE_Tune4C_13TeV-pythia8/MINIAODSIM/AVE20BX25_tsg_PHYS14_25_V3-v1/10000/CE81818A-A289-E411-B899-003048D3CD6C.root") #i miniAOD non riesce ad aprirmeli
 
@@ -19,21 +59,19 @@ gen_label = ("genParticles")
 ROOT.gROOT.SetBatch()        # don't pop up canvases
 ROOT.gROOT.SetStyle('Plain') # white background
 
-#PtDummyHist = ROOT.TH1F ("PtDummmy", "PtDummy", 100, 0, 3)
-
 # loop over events
 
 #loopo sugli eventi e a evento fissato mi prendo la collezione degli elettroni
 
 # Per le regioni uso i dizionari
-pt_regions=['0_30','30_60','60_100','100_200']# just the label of the regions
+pt_regions=['0_15','15_30','30_60','60_100','100_200']# just the label of the regions
 
 regions={}
-regions['0_30']=dict(name='ptEE0_30',ptmin=0.,ptmax=30.)
+regions['0_15']=dict(name='ptEE0_15',ptmin=0.,ptmax=15.)
+regions['15_30']=dict(name='ptEE15_30',ptmin=15.,ptmax=30.)
 regions['30_60']=dict(name='ptEE30_60',ptmin=30.,ptmax=60.)
 regions['60_100']=dict(name='ptEE60_100',ptmin=60.,ptmax=100.)
 regions['100_200']=dict(name='ptEE100_200',ptmin=100.,ptmax=200.)
-
 
 hist={}# Ho bisogno di tutta una serie di istogramma che dipendono dalla variabile e dalla regione
 hist['pt1_reco']={}
@@ -44,20 +82,18 @@ hist['pt2_gen']={}
 hist['pt1_Over_pt2_gen']={}
 
 for region in pt_regions:
-    print regions[region]['name']
-    hist['pt1_reco'][regions[region]['name']]=ROOT.TH1F(str('pt1_reco_'+regions[region]['name']),str('pt1_reco_'+regions[region]['name']),100,regions[region]['ptmin'],regions[region]['ptmax'])
-    hist['pt2_reco'][regions[region]['name']]=ROOT.TH1F(str('pt2_reco_'+regions[region]['name']),str('pt2_reco_'+regions[region]['name']),100,regions[region]['ptmin'],regions[region]['ptmax'])
-    hist['pt1_Over_pt2_reco'][regions[region]['name']]=ROOT.TH1F(str('pt1_Over_pt2_reco_'+regions[region]['name']),str('pt1_Over_pt2_reco_'+regions[region]['name']),100,0,3)
+   print regions[region]['name']
+   hist['pt1_reco'][regions[region]['name']]=ROOT.TH1F(str('pt1_reco_'+regions[region]['name']),str('pt1_reco_'+regions[region]['name']),100,regions[region]['ptmin'],regions[region]['ptmax'])
+   hist['pt2_reco'][regions[region]['name']]=ROOT.TH1F(str('pt2_reco_'+regions[region]['name']),str('pt2_reco_'+regions[region]['name']),100,regions[region]['ptmin'],regions[region]['ptmax'])
+   hist['pt1_Over_pt2_reco'][regions[region]['name']]=ROOT.TH1F(str('pt1_Over_pt2_reco_'+regions[region]['name']),str('pt1_Over_pt2_reco_'+regions[region]['name']),100,0,3)
 
-    hist['pt1_gen'][regions[region]['name']]=ROOT.TH1F(str('pt1_gen_'+regions[region]['name']),str('pt1_gen_'+regions[region]['name']),100,regions[region]['ptmin'],regions[region]['ptmax'])
-    hist['pt2_gen'][regions[region]['name']]=ROOT.TH1F(str('pt2_gen_'+regions[region]['name']),str('pt2_gen_'+regions[region]['name']),100,regions[region]['ptmin'],regions[region]['ptmax'])
-    hist['pt1_Over_pt2_gen'][regions[region]['name']]=ROOT.TH1F(str('pt1_Over_pt2_gen_'+regions[region]['name']),str('pt1_Over_pt2_gen_'+regions[region]['name']),100,0,3)
+   hist['pt1_gen'][regions[region]['name']]=ROOT.TH1F(str('pt1_gen_'+regions[region]['name']),str('pt1_gen_'+regions[region]['name']),100,regions[region]['ptmin'],regions[region]['ptmax'])
+   hist['pt2_gen'][regions[region]['name']]=ROOT.TH1F(str('pt2_gen_'+regions[region]['name']),str('pt2_gen_'+regions[region]['name']),100,regions[region]['ptmin'],regions[region]['ptmax'])
+   hist['pt1_Over_pt2_gen'][regions[region]['name']]=ROOT.TH1F(str('pt1_Over_pt2_gen_'+regions[region]['name']),str('pt1_Over_pt2_gen_'+regions[region]['name']),100,0,3)
 
 canvas={}# a comparison plot for each region
 for region in pt_regions:
-    canvas[str(region)]=ROOT.TCanvas(str(region),str(region))
-
-
+   canvas[str(region)]=ROOT.TCanvas(str(region),str(region))
 
 # loop over the events
 for iev,event in enumerate(events):
@@ -124,30 +160,26 @@ for iev,event in enumerate(events):
 
 #If directory doesn't exist, then create it
 if not os.path.exists('~/scratch1/www/Pt1Pt2/pt1_pt2_plots'):
-    os.makedirs('~/scratch1/www/Pt1Pt2/pt1_pt2_plots')
+   os.makedirs('~/scratch1/www/Pt1Pt2/pt1_pt2_plots')
+   
+#file = ROOT.TFile('histograms.root','RECREATE')
+file = ROOT.TFile(str('histograms_'+_N+'.root'),'RECREATE')
 
-file = ROOT.TFile('histograms.root','RECREATE')
 for region in pt_regions:
-###GEN
     hist['pt1_gen'][regions[region]['name']].Write()
     hist['pt2_gen'][regions[region]['name']].Write()
     hist['pt1_Over_pt2_gen'][regions[region]['name']].Write()
-    canvas[str(region)].cd()
-    hist['pt1_Over_pt2_gen'][regions[region]['name']].SetLineColor(ROOT.kRed)
-    hist['pt1_Over_pt2_gen'][regions[region]['name']].Draw()
-    canvas[str(region)].SaveAs(str('~/scratch1/www/Pt1Pt2/pt1_pt2_plots/'+region+'_gen.png'))
-    canvas[str(region)].Write()
+    #canvas[str(region)].cd()
+    #hist['pt1_Over_pt2_gen'][regions[region]['name']].SetLineColor(ROOT.kRed)
+    #hist['pt1_Over_pt2_gen'][regions[region]['name']].Draw()
+    #canvas[str(region)].SaveAs(str('~/scratch1/www/Pt1Pt2/pt1_pt2_plots/'+region+'_gen.png'))
+    #canvas[str(region)].Write()
 ###RECO
     hist['pt1_reco'][regions[region]['name']].Write()
     hist['pt2_reco'][regions[region]['name']].Write()
     hist['pt1_Over_pt2_reco'][regions[region]['name']].Write()
-    canvas[str(region)].cd()
-    hist['pt1_Over_pt2_reco'][regions[region]['name']].Draw()
-    canvas[str(region)].SaveAs(str('~/scratch1/www/Pt1Pt2/pt1_pt2_plots/'+region+'_reco.png'))
-    canvas[str(region)].Write()
-
-
-
-
-
+    #canvas[str(region)].cd()
+    #hist['pt1_Over_pt2_reco'][regions[region]['name']].Draw()
+    #canvas[str(region)].SaveAs(str('~/scratch1/www/Pt1Pt2/pt1_pt2_plots/'+region+'_reco.png'))
+    #canvas[str(region)].Write()
 
