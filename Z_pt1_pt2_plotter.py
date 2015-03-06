@@ -81,6 +81,7 @@ hist['pt1_gen']={}
 hist['pt2_gen']={}
 hist['pt1_Over_pt2_gen']={}
 
+histo_ptZ=ROOT.TH1F("ptZ","",100,0,100)
 for region in pt_regions:
    print regions[region]['name']
    hist['pt1_reco'][regions[region]['name']]=ROOT.TH1F(str('pt1_reco_'+regions[region]['name']),str('pt1_reco_'+regions[region]['name']),100,regions[region]['ptmin'],regions[region]['ptmax'])
@@ -149,6 +150,7 @@ for iev,event in enumerate(events):
                 hist['pt1_gen'][regions[region]['name']].Fill(pt1_gen)
                 hist['pt2_gen'][regions[region]['name']].Fill(pt2_gen)
                 hist['pt1_Over_pt2_gen'][regions[region]['name']].Fill(pt1_gen/pt2_gen)
+                histo_ptZ.Fill(vector_Z_gen.Pt())
     if (ismatched0 and ismatched1):
         for region in pt_regions: 
             if ((vector_Z_gen.Pt()) >= regions[region]['ptmin'] and (vector_Z_gen.Pt()) < regions[region]['ptmax']):
@@ -183,3 +185,4 @@ for region in pt_regions:
     #canvas[str(region)].SaveAs(str('~/scratch1/www/Pt1Pt2/pt1_pt2_plots/'+region+'_reco.png'))
     #canvas[str(region)].Write()
 
+histo_ptZ.Write()
