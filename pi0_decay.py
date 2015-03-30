@@ -1,3 +1,5 @@
+#python code to have the pdf distribution of E1E2 in pi0 decay in two photons
+#The energy of the photons id uniform between a minimum and a maximum
 import ROOT
 import math
 
