@@ -11,41 +11,20 @@ from DataFormats.FWLite import Events, Handle
 # https://cmsweb.cern.ch/das/request?input=dataset%3D%2FDYToEE_Tune4C_13TeV-pythia8%2FPhys14DR-AVE20BX25_tsg_PHYS14_25_V3-v1%2FAODSIM&instance=prod%2Fglobal
 
 ######################Parsing arguments in python#####################
-import sys,getopt #to handle arguments in python
+from optparse import OptionParser
+parser=OptionParser()
+parser.add_option("-n","--file_number",dest="_N",default=0,help="number of file")
+parser.add_option("-c","--configuration",dest="_1and2",type="str",default="leading",help="configuration")
 
-def main(argv):# defining the main function, called later
-   try:
-      opts, args = getopt.getopt(argv,"un:",["file_number=","usage"])
-      #getopt takes three args: a list (argv),short options, long options
-      #short options that requires an argument are followed by :, long options requiring an argument are followed by =
-   except getopt.GetoptError:
-      print("something went wrong")
-      sys.exit(2)
-   for opt, arg in opts:
-      if opt == '-u': # I really don't get why it doesn't work with "-h" ??????
-         print('python Z_pt1_pt2_plotter.py -n <file_number>')
-         print('or, if you prefer')
-         print('python Z_pt1_pt2_plotter.py --file_number=<file_number>')
-         sys.exit(0)
-      elif opt in ("-n","--file_number"):
-         global _N #defining a global variable _N
-         _N=arg
+(options,args)=parser.parse_args()
 
-if __name__ == "__main__": #Qui non capisco cosa faccia? pero' sicuramente sotto chiamo main con la lista degli argomenti
-   main(sys.argv[1:]) #argomento 0 e' il plotter.py, percio' lo scarti e ti prendi gli altri che seguono
 
-########################################################################
-#def isAncestor(a,p) :
-#   if a == p : 
-#      return True
-#   for i in xrange(0,p.numberOfMothers()) :
-#      if isAncestor(a,p.mother(i)) :
-#         return True
-#   return False
+print "You are running on file ",options._N
+print " and with",options._1and2," configuration"
 
 ###Defining classes#############
 class gen_electron:
-    def __init__(self, px,py,pz,E):#This is the constructor
+    def __init__(self, px,py,pz,E):#This is the constructor of gen_electron
         self.p4 = ROOT.TLorentzVector(px,py,pz,E)
         self.region = 'none'
         if abs(self.p4.Eta()) < 1.4442:
@@ -68,6 +47,8 @@ class Zboson_object:
         elif self.e1.region=='endcap' and self.e2.region=='endcap':
             self.regions = 'EE'
 
+filenames=[]
+
 #MiniAOD M-50
 sample_location= 'root://xrootd.unl.edu//store/mc/Phys14DR/DYToEE_M-50_Tune4C_13TeV-pythia8/MINIAODSIM/PU20bx25_tsg_castor_PHYS14_25_V1-v1/10000/'
 filename=['12BA0756-4681-E411-9C3D-002590A88812.root',
@@ -80,12 +61,31 @@ filename=['12BA0756-4681-E411-9C3D-002590A88812.root',
           '6235AC67-2D82-E411-B094-002590200838.root',
           '90FB27D8-2E82-E411-8ECC-002590A36FB2.root',
           '9660E98A-7A84-E411-B008-001E67397B11.root']
+for file in filename:
+   filenames.append(sample_location+str(file))
+#120-200
+sample_location_120_200='root://xrootd.unl.edu//store/mc/Phys14DR/DYJetsToEEMuMu_M-120To200_13TeV-madgraph/MINIAODSIM/PU20bx25_PHYS14_25_V1-v2/10000/'
+filename_120_200=['0626BCFB-C27C-E411-BFCF-002590747DDC.root',
+                  'C645CDFB-C27C-E411-A3B0-002590747DDC.root']
+for file in filename_120_200:
+   filenames.append(sample_location_120_200+str(file))
+#200-400
+#only 1 file for this
+filenames.append("root://xrootd.unl.edu//store/mc/Phys14DR/DYJetsToEEMuMu_M-400To800_13TeV-madgraph/MINIAODSIM/PU20bx25_PHYS14_25_V1-v1/00000/6C63A3C9-2972-E411-9997-00266CFFBCD0.root")
+
+print str(filenames[int(options._N)])
+
+#os means operating system #This doesn't work, of course
+#for file in os.listdir("root://xrootd.unl.edu//store/mc/Phys14DR/DYJetsToEEMuMu_M-400To800_13TeV-madgraph/MINIAODSIM/PU20bx25_PHYS14_25_V1-v1/00000/"):
+#   if file.endswith(".root"):
+#      filename.append(file)
+
+#for file in filename:
+#   print file
 
 
-print str(sample_location+filename[int(_N)])
-
-
-events = Events(str(sample_location+filename[int(_N)]))
+#events = Events(str(sample_location+filename[int(options._N)]))
+events = Events(str(filenames[int(options._N)]))
 
 # create handle outside of loop
 ele_handle  = Handle ('std::vector<pat::Electron>')
@@ -134,8 +134,8 @@ for det in detector_regions:
    hist['pt2_gen'][det]={}
    hist['pt1_Over_pt2_gen'][det]={}
 
-histo_ptZ_gen=ROOT.TH1F("ptZ_gen","ptZ_gen",100,0,100)
-histo_massZ_gen=ROOT.TH1F("massZ_gen","massZ_gen",150,0,150)
+histo_ptZ_gen=ROOT.TH1F("ptZ_gen","ptZ_gen",300,0,300)
+histo_massZ_gen=ROOT.TH1F("massZ_gen","massZ_gen",500,0,500)
 histo_eta0_gen=ROOT.TH1F("eta0_gen","eta0_gen",100,-10,10)
 histo_eta1_gen=ROOT.TH1F("eta1_gen","eta1_gen",100,-10,10)
 
@@ -143,30 +143,30 @@ histo_eta1_gen=ROOT.TH1F("eta1_gen","eta1_gen",100,-10,10)
 for region in pt_regions:
    print regions[region]['name']
    for det in detector_regions:
-      hist['pt1_reco'][det][regions[region]['name']]=ROOT.TH1F(str('pt1_reco_'+det+'_'+regions[region]['name']),str('pt1_reco_'+det+'_'+regions[region]['name']),100,0,100)
+      hist['pt1_reco'][det][regions[region]['name']]=ROOT.TH1F(str('pt1_reco_'+det+'_'+regions[region]['name']),str('pt1_reco_'+det+'_'+regions[region]['name']),300,0,300)
       print str('pt1_reco_'+det+'_'+regions[region]['name'])
-      hist['pt2_reco'][det][regions[region]['name']]=ROOT.TH1F(str('pt2_reco_'+det+'_'+regions[region]['name']),str('pt2_reco_'+det+'_'+regions[region]['name']),100,0,100)
-      hist['pt1_Over_pt2_reco'][det][regions[region]['name']]=ROOT.TH1F(str('pt1_Over_pt2_reco_'+det+'_'+regions[region]['name']),str('pt1_Over_pt2_reco_'+det+'_'+regions[region]['name']),100,0,3)
+      hist['pt2_reco'][det][regions[region]['name']]=ROOT.TH1F(str('pt2_reco_'+det+'_'+regions[region]['name']),str('pt2_reco_'+det+'_'+regions[region]['name']),300,0,300)
+      hist['pt1_Over_pt2_reco'][det][regions[region]['name']]=ROOT.TH1F(str('pt1_Over_pt2_reco_'+det+'_'+regions[region]['name']),str('pt1_Over_pt2_reco_'+det+'_'+regions[region]['name']),200,0,5)
 
-      hist['pt1_gen'][det][regions[region]['name']]=ROOT.TH1F(str('pt1_gen_'+det+'_'+regions[region]['name']),str('pt1_gen_'+det+'_'+regions[region]['name']),100,0,100)
-      hist['pt2_gen'][det][regions[region]['name']]=ROOT.TH1F(str('pt2_gen_'+det+'_'+regions[region]['name']),str('pt2_gen_'+det+'_'+regions[region]['name']),100,0,100)
-      hist['pt1_Over_pt2_gen'][det][regions[region]['name']]=ROOT.TH1F(str('pt1_Over_pt2_gen_'+det+'_'+regions[region]['name']),str('pt1_Over_pt2_gen_'+det+'_'+regions[region]['name']),100,0,3)
+      hist['pt1_gen'][det][regions[region]['name']]=ROOT.TH1F(str('pt1_gen_'+det+'_'+regions[region]['name']),str('pt1_gen_'+det+'_'+regions[region]['name']),300,0,300)
+      hist['pt2_gen'][det][regions[region]['name']]=ROOT.TH1F(str('pt2_gen_'+det+'_'+regions[region]['name']),str('pt2_gen_'+det+'_'+regions[region]['name']),300,0,300)
+      hist['pt1_Over_pt2_gen'][det][regions[region]['name']]=ROOT.TH1F(str('pt1_Over_pt2_gen_'+det+'_'+regions[region]['name']),str('pt1_Over_pt2_gen_'+det+'_'+regions[region]['name']),200,0,5)
 
 # loop over the events
 counter = 0
 counter_none=0
 
 uniform_test=ROOT.TH1F("uniform_test","uniform_test",100,0,1)
-gauss_test=ROOT.TH1F("gauss_test","gauss_test",100,0,1)
+#gauss_test=ROOT.TH1F("gauss_test","gauss_test",100,0,1)
 rand=ROOT.TRandom3()
-rand_gauss=ROOT.TRandom3()
+#rand_gauss=ROOT.TRandom3()
 
 for iev,event in enumerate(events):
 
     uniform_test.Fill(rand.Uniform(0,1)) #x_min,x_max
-    gauss_test.Fill(rand_gauss.Gaus(0.5,0.1)) #mean,sigma
+    #gauss_test.Fill(rand_gauss.Gaus(0.5,0.1)) #mean,sigma
     counter =counter +1
-    #if iev > 100: break #For quick tests
+    if iev > 100: break #For quick tests
     #print iev #Ti stampa il numero dell'evento che stai considerando
     # use getByLabel, just like in cmsRun
     event.getByLabel (ele_label,ele_handle)
@@ -249,11 +249,16 @@ for iev,event in enumerate(events):
 
         for region in pt_regions: 
             if ( vector_Z_gen.Pt() >= regions[region]['ptmin'] and vector_Z_gen.Pt() < regions[region]['ptmax'] and detector_descriptor!='none'):
-                if(pt1_gen < pt2_gen): #swap if 2 is the leading
-                   temp=pt1_gen
-                   pt1_gen=pt2_gen
-                   pt2_gen=temp
-
+                if(options._1and2=="leading"): 
+                   if(pt1_gen < pt2_gen): #swap if 2 is the leading
+                      temp=pt1_gen
+                      pt1_gen=pt2_gen
+                      pt2_gen=temp
+                elif(options._1and2=="random"):
+                   if(rand.Uniform(0,1)>0.5): #If rand number  > 0.5 :swap
+                      temp=pt1
+                      pt1=pt2
+                      pt2=temp
                 hist['pt1_gen'][detector_descriptor][regions[region]['name']].Fill(pt1_gen)
                 hist['pt2_gen'][detector_descriptor][regions[region]['name']].Fill(pt2_gen)
                 hist['pt1_Over_pt2_gen'][detector_descriptor][regions[region]['name']].Fill(pt1_gen/pt2_gen)
@@ -263,10 +268,16 @@ for iev,event in enumerate(events):
     if (ismatched0 and ismatched1):
         for region in pt_regions: 
             if (vector_Z_gen.Pt() >= regions[region]['ptmin'] and vector_Z_gen.Pt() < regions[region]['ptmax'] and detector_descriptor!='none'):
-                if(pt1 < pt2): #swap if 2 is the leading
-                   temp=pt1
-                   pt1=pt2
-                   pt2=temp
+                if(options._1and2=="leading"):
+                   if(pt1 < pt2): #swap if 2 is the leading
+                      temp=pt1
+                      pt1=pt2
+                      pt2=temp
+                elif(options._1and2=="random"):
+                   if(rand.Uniform(0,1)>0.5): #If rand number  > 0.5 :swap
+                      temp=pt1
+                      pt1=pt2
+                      pt2=temp
                 hist['pt1_reco'][detector_descriptor][regions[region]['name']].Fill(pt1)
                 hist['pt2_reco'][detector_descriptor][regions[region]['name']].Fill(pt2)
                 hist['pt1_Over_pt2_reco'][detector_descriptor][regions[region]['name']].Fill(pt1/pt2)
@@ -283,7 +294,7 @@ if not os.path.exists('~/scratch1/www/Pt1Pt2/pt1_pt2_plots'):
    os.makedirs('~/scratch1/www/Pt1Pt2/pt1_pt2_plots')
    
 #file = ROOT.TFile('histograms.root','RECREATE')
-file = ROOT.TFile(str('histograms_'+_N+'.root'),'RECREATE')
+file = ROOT.TFile(str('histograms_'+str(options._N)+'.root'),'RECREATE')
 
 for region in pt_regions:
     for det in detector_regions:
@@ -300,4 +311,4 @@ histo_massZ_gen.Write()
 histo_eta0_gen.Write()
 histo_eta1_gen.Write()
 uniform_test.Write()
-gauss_test.Write()
+#gauss_test.Write()
